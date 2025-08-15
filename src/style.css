@@ -1,7 +1,7 @@
 body {
-  font-family: Arial, sans-serif;
-  background-color: #000;
-  color: #fff;
+  font-family: 'Times New Roman', Times, serif;
+  background-color: #cbc0c0;
+  color: #000;
   text-align: center;
 }
 
@@ -14,7 +14,7 @@ input, button {
 table {
   margin: auto;
   border-collapse: collapse;
-  background-color: #111;
+  background-color: #cbc0c0;
 }
 
 th, td {
@@ -23,7 +23,7 @@ th, td {
 }
 
 th {
-  background-color: #222;
+  background-color: #cbc0c0;
 }
 
 button {
