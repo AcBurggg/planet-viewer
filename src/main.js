@@ -57,17 +57,38 @@ function updatePositions() {
  
   try {
     const observer = new Astronomy.Observer(userLat, userLon, 0);
-    const eqCoords = Astronomy.Equator(Astronomy.Body.Mars, date, observer, true, true); //needs first true to get 'correct horizontal coordinates' for Horizon() call.
-    const horiz = Astronomy.Horizon(date, observer, eqCoords.ra, eqCoords.dec, "normal"); 
-    //horizon takes in a date (flexibleDateTime), observer (Observer), ra(number), dec(number), refraction (string), it returns a horizontalCoordinates object
-    let html = `<table><tr><th>Planet</th><th>Altitude (°)</th><th>Azimuth (°)</th></tr>`;
-    html += `<tr>
-                <td>Mars</td>
-                <td>${horiz.altitude.toFixed(1)}</td>
-                <td>${horiz.azimuth.toFixed(1)}</td>
-             </tr>`;
-    html += `</table>`;
-    document.getElementById("output").innerHTML = html;
+      // List of all major planets in Astronomy Engine
+      const planets = [
+        { name: "The Moon", body: Astronomy.Body.Moon},
+        { name: "Mercury", body: Astronomy.Body.Mercury },
+        { name: "Venus", body: Astronomy.Body.Venus },
+        { name: "Mars", body: Astronomy.Body.Mars },
+        { name: "Jupiter", body: Astronomy.Body.Jupiter },
+        { name: "Saturn", body: Astronomy.Body.Saturn },
+        { name: "Uranus", body: Astronomy.Body.Uranus },
+        { name: "Neptune", body: Astronomy.Body.Neptune }
+      ];
+
+      let html = `<table><tr><th>Planet</th><th>Altitude (°)</th><th>Azimuth (°)</th></tr>`;
+
+      planets.forEach(planet => {
+        try {
+          // Get equatorial coordinates (ra, dec) for the planet
+          const equ = Astronomy.Equator(planet.body, date, observer, true, true);
+          // Use ra/dec to get horizontal coordinates
+          const horiz = Astronomy.Horizon(date, observer, equ.ra, equ.dec, "normal");
+          html += `<tr>
+                      <td>${planet.name}</td>
+                      <td>${horiz.altitude.toFixed(1)}</td>
+                      <td>${horiz.azimuth.toFixed(1)}</td>
+                   </tr>`;
+        } catch (err) {
+          html += `<tr><td>${planet.name}</td><td colspan='2'>Error: ${err.message}</td></tr>`;
+        }
+      });
+
+      html += `</table>`;
+      document.getElementById("output").innerHTML = html;
   } catch (e) {
     document.getElementById("output").innerHTML = `<p>Error: ${e.message}</p>`;
   }
