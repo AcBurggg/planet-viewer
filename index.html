@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Planet Position Tracker</title>
+    <link rel="stylesheet" href="/src/style.css">
+  </head>
+  <body>
+    <h1>Planet Position Tracker</h1>
+
+
+    <form id="coords-form" style="margin-bottom:1em;">
+      <label>Latitude: <input type="number" id="lat-input" step="any" min="-90" max="90" required></label>
+      <label>Longitude: <input type="number" id="lon-input" step="any" min="-180" max="180" required></label>
+      <button type="button" id="use-geoloc">Use My Location</button>
+    </form>
+
+    <p>Select a date/time:</p>
+    <input type="datetime-local" id="datetime">
+    <button id="update-btn">Get Positions</button>
+
+    <div id="output"></div>
+
+    <!-- Vite will inject your bundled JS here -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
