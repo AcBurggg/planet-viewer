@@ -20,7 +20,28 @@
     <label>Select a date/time:</label><input type="datetime-local" id="datetime">
     <button id="update-btn">Get Positions</button>
 
-    <div id="output"></div>
+
+    <table id="planet-table" style="margin-top:2em;">
+      <thead>
+        <tr>
+          <th>Planet</th>
+          <th>Right Ascension: [0,24) Hours</th>
+          <th>Declination: [-90, +90]º</th>
+          <th>Altitude: [-90, +90]º</th>
+          <th>Azimuth: [0, 360)º</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>The Moon</td><td id="moon-ra"></td><td id="moon-dec"></td><td id="moon-alt"></td><td id="moon-az"></td></tr>
+        <tr><td>Mercury</td><td id="mercury-ra"></td><td id="mercury-dec"></td><td id="mercury-alt"></td><td id="mercury-az"></td></tr>
+        <tr><td>Venus</td><td id="venus-ra"></td><td id="venus-dec"></td><td id="venus-alt"></td><td id="venus-az"></td></tr>
+        <tr><td>Mars</td><td id="mars-ra"></td><td id="mars-dec"></td><td id="mars-alt"></td><td id="mars-az"></td></tr>
+        <tr><td>Jupiter</td><td id="jupiter-ra"></td><td id="jupiter-dec"></td><td id="jupiter-alt"></td><td id="jupiter-az"></td></tr>
+        <tr><td>Saturn</td><td id="saturn-ra"></td><td id="saturn-dec"></td><td id="saturn-alt"></td><td id="saturn-az"></td></tr>
+        <tr><td>Uranus</td><td id="uranus-ra"></td><td id="uranus-dec"></td><td id="uranus-alt"></td><td id="uranus-az"></td></tr>
+        <tr><td>Neptune</td><td id="neptune-ra"></td><td id="neptune-dec"></td><td id="neptune-alt"></td><td id="neptune-az"></td></tr>
+      </tbody>
+    </table>
 
     <!-- Vite will inject your bundled JS here -->
     <script type="module" src="/src/main.js"></script>

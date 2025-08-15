@@ -63,41 +63,41 @@ function updatePositions() {
  
   try {
     const observer = new Astronomy.Observer(userLat, userLon, 0);
-      // List of all major planets in Astronomy Engine
-      const planets = [
-        { name: "The Moon", body: Astronomy.Body.Moon},
-        { name: "Mercury", body: Astronomy.Body.Mercury },
-        { name: "Venus", body: Astronomy.Body.Venus },
-        { name: "Mars", body: Astronomy.Body.Mars },
-        { name: "Jupiter", body: Astronomy.Body.Jupiter },
-        { name: "Saturn", body: Astronomy.Body.Saturn },
-        { name: "Uranus", body: Astronomy.Body.Uranus },
-        { name: "Neptune", body: Astronomy.Body.Neptune }
-      ];
+    const planets = [
+      { name: "The Moon", body: Astronomy.Body.Moon, id: "moon" },
+      { name: "Mercury", body: Astronomy.Body.Mercury, id: "mercury" },
+      { name: "Venus", body: Astronomy.Body.Venus, id: "venus" },
+      { name: "Mars", body: Astronomy.Body.Mars, id: "mars" },
+      { name: "Jupiter", body: Astronomy.Body.Jupiter, id: "jupiter" },
+      { name: "Saturn", body: Astronomy.Body.Saturn, id: "saturn" },
+      { name: "Uranus", body: Astronomy.Body.Uranus, id: "uranus" },
+      { name: "Neptune", body: Astronomy.Body.Neptune, id: "neptune" }
+    ];
 
-      let html = `<table><tr><th>Planet</th><th>Right Ascension: [0,24) Hours</th><th>Declination: [-90, +90]º</th><th>Altitude: [-90, +90]º</th><th>Azimuth: [0, 360)º</th></tr>`;
-
-      planets.forEach(planet => {
-        try {
-          // Get equatorial coordinates (ra, dec) for the planet to be used with Horizon call
-          const equ = Astronomy.Equator(planet.body, date, observer, true, true);
-          const horiz = Astronomy.Horizon(date, observer, equ.ra, equ.dec, "normal");
-          html += `<tr>
-                      <td>${planet.name}</td>
-                      <td>${equ.ra.toFixed(1)}</td>
-                      <td>${equ.dec.toFixed(1)}</td>
-                      <td>${horiz.altitude.toFixed(1)}</td>
-                      <td>${horiz.azimuth.toFixed(1)}</td>
-                   </tr>`;
-        } catch (err) {
-          html += `<tr><td>${planet.name}</td><td colspan='2'>Error: ${err.message}</td></tr>`;
-        }
-      });
-
-      html += `</table>`;
-      document.getElementById("output").innerHTML = html;
+    planets.forEach(planet => {
+      try {
+        const equ = Astronomy.Equator(planet.body, date, observer, true, true);
+        const horiz = Astronomy.Horizon(date, observer, equ.ra, equ.dec, "normal");
+        document.getElementById(`${planet.id}-ra`).textContent = equ.ra.toFixed(1);
+        document.getElementById(`${planet.id}-dec`).textContent = equ.dec.toFixed(1);
+        document.getElementById(`${planet.id}-alt`).textContent = horiz.altitude.toFixed(1);
+        document.getElementById(`${planet.id}-az`).textContent = horiz.azimuth.toFixed(1);
+      } catch (err) {
+        document.getElementById(`${planet.id}-ra`).textContent = 'Error';
+        document.getElementById(`${planet.id}-dec`).textContent = 'Error';
+        document.getElementById(`${planet.id}-alt`).textContent = 'Error';
+        document.getElementById(`${planet.id}-az`).textContent = 'Error';
+      }
+    });
   } catch (e) {
-    document.getElementById("output").innerHTML = `<p>Error: ${e.message}</p>`;
+    // If something goes wrong globally, clear all table cells
+    const ids = ["moon","mercury","venus","mars","jupiter","saturn","uranus","neptune"];
+    ids.forEach(id => {
+      ["ra","dec","alt","az"].forEach(suffix => {
+        const cell = document.getElementById(`${id}-${suffix}`);
+        if (cell) cell.textContent = 'Error';
+      });
+    });
   }
 }
 
