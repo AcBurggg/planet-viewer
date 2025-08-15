@@ -32,7 +32,13 @@ document.getElementById('use-geoloc').addEventListener('click', e => {
 // Set default date/time to now
 window.addEventListener('DOMContentLoaded', () => {
   const now = new Date();
-  document.getElementById('datetime').value = now.toISOString().slice(0,16);
+  function pad(n) { return n < 10 ? '0' + n : n; }
+  const local = now.getFullYear() + '-' +
+                pad(now.getMonth() + 1) + '-' +
+                pad(now.getDate()) + 'T' +
+                pad(now.getHours()) + ':' +
+                pad(now.getMinutes());
+  document.getElementById('datetime').value = local;
   autofillGeolocation();
 });
 
@@ -69,16 +75,17 @@ function updatePositions() {
         { name: "Neptune", body: Astronomy.Body.Neptune }
       ];
 
-      let html = `<table><tr><th>Planet</th><th>Altitude (°)</th><th>Azimuth (°)</th></tr>`;
+      let html = `<table><tr><th>Planet</th><th>Right Ascension: [0,24) Hours</th><th>Declination: [-90, +90]º</th><th>Altitude: [-90, +90]º</th><th>Azimuth: [0, 360)º</th></tr>`;
 
       planets.forEach(planet => {
         try {
-          // Get equatorial coordinates (ra, dec) for the planet
+          // Get equatorial coordinates (ra, dec) for the planet to be used with Horizon call
           const equ = Astronomy.Equator(planet.body, date, observer, true, true);
-          // Use ra/dec to get horizontal coordinates
           const horiz = Astronomy.Horizon(date, observer, equ.ra, equ.dec, "normal");
           html += `<tr>
                       <td>${planet.name}</td>
+                      <td>${equ.ra.toFixed(1)}</td>
+                      <td>${equ.dec.toFixed(1)}</td>
                       <td>${horiz.altitude.toFixed(1)}</td>
                       <td>${horiz.azimuth.toFixed(1)}</td>
                    </tr>`;
