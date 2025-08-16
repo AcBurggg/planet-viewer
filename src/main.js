@@ -44,7 +44,24 @@ function drawSkyMap(planetsData) {
     let relAz = ((az - azMin + 360) % 360);
     if (relAz > azRange) continue;
     const x = (relAz / azRange) * canvas.width;
-    ctx.fillText(`${az}°`, x, canvas.height - 10);
+    let cardinalDirection;
+    switch (az) {
+      case 0:
+        cardinalDirection = 'N';
+        break;
+      case 90:
+        cardinalDirection = 'E';
+        break;
+      case 180:
+        cardinalDirection = 'S';
+        break;
+      case 270:
+        cardinalDirection = 'W';
+        break;
+      default:
+        cardinalDirection = '';
+    }
+    ctx.fillText(`${cardinalDirection}/${az}°`, x, canvas.height - 10);
     ctx.beginPath();
     ctx.moveTo(x, horizonY);
     ctx.lineTo(x, horizonY + 10);
@@ -149,13 +166,14 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   canvas.style.cursor = 'pointer';
 });
+
 import * as Astronomy from 'astronomy-engine';
 
 
-let userLat = null;
-let userLon = null;
 
 // Try to set lat/lon input fields to user's location
+let userLat = null;
+let userLon = null;
 function autofillGeolocation() {
   if (!navigator.geolocation) {
     alert("Geolocation not supported. Enter coordinates manually.");
