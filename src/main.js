@@ -15,7 +15,7 @@ let userLat = null, userLon = null;
 
 // Background image for sky map
 const bgImg = new Image();
-bgImg.src = '/milkyway.jpeg';
+bgImg.src = 'milkyway.jpeg';
 
 // =============================
 // Utility Functions
