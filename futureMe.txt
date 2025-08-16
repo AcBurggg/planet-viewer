@@ -1,0 +1,4 @@
+If you need to make changes or add features, do development in this repo. After done testing locally and all that, run 'npm run build' which will create dist folder.
+duplicate that folder and rename is 'planet-viewer'. it has to be called that exactly. move it into the Andrew-thoughts repo. 
+
+advice: don't use relative path ever please. the vite.config.js file in this directory defines planet-viewer as the base repo and the build tool does fancy stuff using that to assume that all stuff in the public folder here get put into root when you build. 
