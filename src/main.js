@@ -64,6 +64,7 @@ function drawSkyMap(planetsData) {
     ctx.stroke();
   }
 
+
   // Draw zenith marker (altitude 90)
   const zenithY = canvas.height - 30 - ((90 - altMin) / altRange) * (canvas.height - 60);
   ctx.beginPath();
@@ -74,6 +75,17 @@ function drawSkyMap(planetsData) {
   ctx.fillStyle = '#aaa';
   ctx.textAlign = 'center';
   ctx.fillText('Zenith', canvas.width/2, zenithY - 10);
+
+  // Draw nadir marker (altitude -90, opposite of zenith)
+  const nadirY = canvas.height - 30 - ((-90 - altMin) / altRange) * (canvas.height - 60);
+  ctx.beginPath();
+  ctx.arc(canvas.width/2, nadirY, 10, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#aaa';
+  ctx.stroke();
+  ctx.font = '12px Times New Roman';
+  ctx.fillStyle = '#aaa';
+  ctx.textAlign = 'center';
+  ctx.fillText('Nadir', canvas.width/2, nadirY + 22);
 
   // Draw each planet
   planetsData.forEach(obj => {
