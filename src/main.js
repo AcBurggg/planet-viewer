@@ -8,11 +8,17 @@ let dragStartY = 0;
 let dragStartAz = 180;
 let dragStartAlt = 45;
 
+const bgImg = new Image();
+bgImg.src = '/milkyway.jpeg';
 function drawSkyMap(planetsData) {
   const canvas = document.getElementById('sky-map');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (bgImg.complete) {
+    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 
   // Azimuth and altitude range shown (degrees)
   const azRange = 180; // Show 180° of azimuth at a time
@@ -76,9 +82,21 @@ function drawSkyMap(planetsData) {
     const x = (relAz / azRange) * canvas.width;
     const y = canvas.height - 30 - ((obj.altitude - altMin) / altRange) * (canvas.height - 60);
     if (y < 0 || y > canvas.height) return;
+    const img = obj.img;
+    const planetColors = {
+      "Mercury": "#b0b0b0",
+      "Venus": "#e6e2af",
+      "Mars": "#c1440e",
+      "Jupiter": "#e3c07b",
+      "Saturn": "#f7e7b4",
+      "Uranus": "#7ad7f0",
+      "Neptune": "#4062bb",
+      "Moon": "#dddddd"
+    };
+    const color = planetColors[obj.name] || "#FFD700";
     ctx.beginPath();
     ctx.arc(x, y, 8, 0, 2 * Math.PI);
-    ctx.fillStyle = '#FFD700';
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.font = '12px Times New Roman';
     ctx.fillStyle = '#fff';
@@ -185,14 +203,14 @@ function updatePositions() {
   try {
     const observer = new Astronomy.Observer(userLat, userLon, 0);
     const planets = [
-      { name: "Moon", body: Astronomy.Body.Moon, id: "moon" },
-      { name: "Mercury", body: Astronomy.Body.Mercury, id: "mercury" },
-      { name: "Venus", body: Astronomy.Body.Venus, id: "venus" },
-      { name: "Mars", body: Astronomy.Body.Mars, id: "mars" },
-      { name: "Jupiter", body: Astronomy.Body.Jupiter, id: "jupiter" },
-      { name: "Saturn", body: Astronomy.Body.Saturn, id: "saturn" },
-      { name: "Uranus", body: Astronomy.Body.Uranus, id: "uranus" },
-      { name: "Neptune", body: Astronomy.Body.Neptune, id: "neptune" },
+      { name: "Moon", body: Astronomy.Body.Moon, id: "moon"},
+      { name: "Mercury", body: Astronomy.Body.Mercury, id: "mercury"},
+      { name: "Venus", body: Astronomy.Body.Venus, id: "venus"},
+      { name: "Mars", body: Astronomy.Body.Mars, id: "mars"},
+      { name: "Jupiter", body: Astronomy.Body.Jupiter, id: "jupiter"},
+      { name: "Saturn", body: Astronomy.Body.Saturn, id: "saturn"},
+      { name: "Uranus", body: Astronomy.Body.Uranus, id: "uranus"},
+      { name: "Neptune", body: Astronomy.Body.Neptune, id: "neptune"}
     ];
 
     const planetsData = [];

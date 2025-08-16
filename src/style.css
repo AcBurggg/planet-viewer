@@ -7,6 +7,14 @@
   margin-top: 0.3em;
   margin-bottom: 1.2em;
 }
+.map-source {
+  text-align: center;
+  color: #777777;
+  font-size: 0.95em;
+  font-style: italic;
+  margin-top: 0.3em;
+  margin-bottom: 1.2em;
+}
 /* Center images in coordinate explanation */
 .centered-img {
   display: block;
