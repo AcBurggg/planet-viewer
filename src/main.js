@@ -1,34 +1,86 @@
-// Interactive sky map with azimuth labels and drag-to-pan
 
+// =============================
+// Imports and Global Variables
+// =============================
+import * as Astronomy from 'astronomy-engine';
+
+// Sky map state
 let skyMapAzCenter = 180; // Center azimuth in degrees (default: South)
 let skyMapAltCenter = 45; // Center altitude in degrees (default: halfway between horizon and zenith)
 let isDragging = false;
-let dragStartX = 0;
-let dragStartY = 0;
-let dragStartAz = 180;
-let dragStartAlt = 45;
+let dragStartX = 0, dragStartY = 0, dragStartAz = 180, dragStartAlt = 45;
 
+// User location
+let userLat = null, userLon = null;
+
+// Background image for sky map
 const bgImg = new Image();
 bgImg.src = '/milkyway.jpeg';
+
+// =============================
+// Utility Functions
+// =============================
+//helps with displaying date/times earlier than 10 into HTML
+function pad(n) { return n < 10 ? '0' + n : n; }
+
+// =============================
+// Geolocation and Date/Time Setup
+// =============================
+function autofillGeolocation() {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported. Enter coordinates manually.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLat = pos.coords.latitude;
+    userLon = pos.coords.longitude;
+    document.getElementById('lat-input').value = userLat.toFixed(6);
+    document.getElementById('lon-input').value = userLon.toFixed(6);
+  }, err => {
+    alert("Location access denied. Enter coordinates manually or use default Deerlick Astronomy Village coords.");
+    userLat = 33.5614;
+    userLon = -82.7631;
+    document.getElementById('lat-input').value = userLat;
+    document.getElementById('lon-input').value = userLon;
+  });
+}
+
+function setDefaultDateTime() {
+  const now = new Date();
+  const local = now.getFullYear() + '-' +
+                pad(now.getMonth() + 1) + '-' +
+                pad(now.getDate()) + 'T' +
+                pad(now.getHours()) + ':' +
+                pad(now.getMinutes());
+  document.getElementById('datetime').value = local;
+}
+
+// =============================
+// Sky Map Drawing
+// =============================
 function drawSkyMap(planetsData) {
   const canvas = document.getElementById('sky-map');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+  // Draw background
   if (bgImg.complete) {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
   } else {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  // Azimuth and altitude range shown (degrees)
-  const azRange = 180; // Show 180° of azimuth at a time
-  const altRange = 120; // Show 120° of altitude at a time (e.g., -30 to +90)
+  // Azimuth and altitude range shown (degrees) (i.e. how much user sees as given time)
+  const azRange = 180;
+  const altRange = 120;
+
+  //azimuth range defined by fixed left point plus range
   const azMin = skyMapAzCenter - azRange/2;
-  const azMax = skyMapAzCenter + azRange/2;
+
+  //alt needs upper/lower bound since range does not wrap around like azimuth (defined by center value)
   const altMin = skyMapAltCenter - altRange/2;
   const altMax = skyMapAltCenter + altRange/2;
 
-  // Draw horizon line (altitude 0)
+  // Draw horizon line (altitude 0)... use lighter color for emphasis on dark background image
   const horizonY = canvas.height - 30 - ((0 - altMin) / altRange) * (canvas.height - 60);
   ctx.strokeStyle = '#888';
   ctx.beginPath();
@@ -44,23 +96,11 @@ function drawSkyMap(planetsData) {
     let relAz = ((az - azMin + 360) % 360);
     if (relAz > azRange) continue;
     const x = (relAz / azRange) * canvas.width;
-    let cardinalDirection;
-    switch (az) {
-      case 0:
-        cardinalDirection = 'N';
-        break;
-      case 90:
-        cardinalDirection = 'E';
-        break;
-      case 180:
-        cardinalDirection = 'S';
-        break;
-      case 270:
-        cardinalDirection = 'W';
-        break;
-      default:
-        cardinalDirection = '';
-    }
+    let cardinalDirection = '';
+    if (az === 0) cardinalDirection = 'N';
+    else if (az === 90) cardinalDirection = 'E';
+    else if (az === 180) cardinalDirection = 'S';
+    else if (az === 270) cardinalDirection = 'W';
     ctx.fillText(`${cardinalDirection}/${az}°`, x, canvas.height - 10);
     ctx.beginPath();
     ctx.moveTo(x, horizonY);
@@ -71,18 +111,17 @@ function drawSkyMap(planetsData) {
 
   // Draw altitude degree labels (e.g., -30, 0, 30, 60, 90)
   ctx.textAlign = 'right';
-  for (let alt = Math.ceil(altMin/30)*30; alt <= altMax; alt += 30) {
+  for (let alt = Math.ceil((skyMapAltCenter - altRange/2)/30)*30; alt <= altMax; alt += 30) {
     const y = canvas.height - 30 - ((alt - altMin) / altRange) * (canvas.height - 60);
     ctx.fillText(`${alt}°`, 35, y + 4);
     ctx.beginPath();
     ctx.moveTo(40, y);
     ctx.lineTo(canvas.width, y);
-    ctx.strokeStyle = alt === 0 ? '#888' : '#444'; //horizon will be lighter color
+    ctx.strokeStyle = alt === 0 ? '#888' : '#444';
     ctx.stroke();
   }
 
-
-  // Draw zenith marker (altitude 90)
+  // Draw zenith marker (altitude 90) (used chatGPT to help get x,y canvas coordinates formula from alt/az values...applies to zenith,nadir,planets)
   const zenithY = canvas.height - 30 - ((90 - altMin) / altRange) * (canvas.height - 60);
   ctx.beginPath();
   ctx.arc(canvas.width/2, zenithY, 10, 0, 2 * Math.PI);
@@ -93,7 +132,7 @@ function drawSkyMap(planetsData) {
   ctx.textAlign = 'center';
   ctx.fillText('Zenith', canvas.width/2, zenithY - 10);
 
-  // Draw nadir marker (altitude -90, opposite of zenith)
+  // Draw nadir marker (altitude -90)
   const nadirY = canvas.height - 30 - ((-90 - altMin) / altRange) * (canvas.height - 60);
   ctx.beginPath();
   ctx.arc(canvas.width/2, nadirY, 10, 0, 2 * Math.PI);
@@ -105,23 +144,22 @@ function drawSkyMap(planetsData) {
   ctx.fillText('Nadir', canvas.width/2, nadirY + 22);
 
   // Draw each planet
+  const planetColors = {
+    "Mercury": "#b0b0b0",
+    "Venus": "#e6e2af",
+    "Mars": "#c1440e",
+    "Jupiter": "#e3c07b",
+    "Saturn": "#f7e7b4",
+    "Uranus": "#7ad7f0",
+    "Neptune": "#4062bb",
+    "Moon": "#dddddd"
+  };
   planetsData.forEach(obj => {
     let relAz = ((obj.azimuth - azMin + 360) % 360);
-    if (relAz < 0 || relAz > azRange) return;
+    if (relAz < 0 || relAz > azRange) return; //don't need to draw any planets not in view
     const x = (relAz / azRange) * canvas.width;
     const y = canvas.height - 30 - ((obj.altitude - altMin) / altRange) * (canvas.height - 60);
     if (y < 0 || y > canvas.height) return;
-    const img = obj.img;
-    const planetColors = {
-      "Mercury": "#b0b0b0",
-      "Venus": "#e6e2af",
-      "Mars": "#c1440e",
-      "Jupiter": "#e3c07b",
-      "Saturn": "#f7e7b4",
-      "Uranus": "#7ad7f0",
-      "Neptune": "#4062bb",
-      "Moon": "#dddddd"
-    };
     const color = planetColors[obj.name] || "#FFD700";
     ctx.beginPath();
     ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -134,8 +172,11 @@ function drawSkyMap(planetsData) {
   });
 }
 
-// Drag-to-pan for sky map (azimuth and altitude)
-window.addEventListener('DOMContentLoaded', () => {
+// =============================
+// Sky Map Interactivity (Drag-to-Pan)
+// =============================
+//used chatGPT to get drag and pan functionality
+function setupSkyMapDrag() {
   const canvas = document.getElementById('sky-map');
   if (!canvas) return;
   canvas.addEventListener('mousedown', e => {
@@ -152,12 +193,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const dy = e.clientY - dragStartY;
     const azRange = 180;
     const altRange = 120;
-  skyMapAzCenter = (dragStartAz - dx * (azRange / canvas.width) + 360) % 360;
-  skyMapAltCenter = dragStartAlt + dy * (altRange / canvas.height);
-  // Clamp altitude center so top never goes above +90 and bottom never below -90
-  const maxCenter = 90 - altRange / 2;
-  const minCenter = -90 + altRange / 2;
-  skyMapAltCenter = Math.max(minCenter, Math.min(maxCenter, skyMapAltCenter));
+    skyMapAzCenter = (dragStartAz - dx * (azRange / canvas.width) + 360) % 360;
+    skyMapAltCenter = dragStartAlt + dy * (altRange / canvas.height);
+    // Clamp altitude center
+    const maxCenter = 90 - altRange / 2;
+    const minCenter = -90 + altRange / 2;
+    skyMapAltCenter = Math.max(minCenter, Math.min(maxCenter, skyMapAltCenter));
     if (window.lastPlanetsData) drawSkyMap(window.lastPlanetsData);
   });
   window.addEventListener('mouseup', () => {
@@ -165,58 +206,12 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas.style.cursor = 'pointer';
   });
   canvas.style.cursor = 'pointer';
-});
-
-import * as Astronomy from 'astronomy-engine';
-
-
-
-// Try to set lat/lon input fields to user's location
-let userLat = null;
-let userLon = null;
-function autofillGeolocation() {
-  if (!navigator.geolocation) {
-    alert("Geolocation not supported. Enter coordinates manually.");
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(pos => {
-    userLat = pos.coords.latitude;
-    userLon = pos.coords.longitude;
-    document.getElementById('lat-input').value = userLat.toFixed(6);
-    document.getElementById('lon-input').value = userLon.toFixed(6);
-  }, err => {
-    alert("Location access denied. Enter coordinates manually or use Deerlick Astronomy Village.");
-    userLat = 33.5614;
-    userLon = -82.7631;
-    document.getElementById('lat-input').value = userLat;
-    document.getElementById('lon-input').value = userLon;
-  });
 }
 
-document.getElementById('use-geoloc').addEventListener('click', e => {
-  e.preventDefault();
-  autofillGeolocation();
-});
-
-// Set default date/time to now
-window.addEventListener('DOMContentLoaded', () => {
-  const now = new Date();
-  function pad(n) { return n < 10 ? '0' + n : n; }
-  const local = now.getFullYear() + '-' +
-                pad(now.getMonth() + 1) + '-' +
-                pad(now.getDate()) + 'T' +
-                pad(now.getHours()) + ':' +
-                pad(now.getMinutes());
-  document.getElementById('datetime').value = local;
-  autofillGeolocation();
-});
-
-
-
-
-
+// =============================
+// Main Planet Position Calculation and Table Update
+// =============================
 function updatePositions() {
-  // Get lat/lon from input fields
   const latVal = parseFloat(document.getElementById('lat-input').value);
   const lonVal = parseFloat(document.getElementById('lon-input').value);
   if (isNaN(latVal) || isNaN(lonVal)) {
@@ -229,7 +224,6 @@ function updatePositions() {
   const dateInput = document.getElementById("datetime").value;
   const date = dateInput ? new Date(dateInput) : new Date();
 
- 
   try {
     const observer = new Astronomy.Observer(userLat, userLon, 0);
     const planets = [
@@ -267,7 +261,7 @@ function updatePositions() {
     window.lastPlanetsData = planetsData;
     drawSkyMap(planetsData);
   } catch (e) {
-    // If something goes wrong globally, clear all table cells
+    // If something goes really wrong, clear all table cells
     const ids = ["moon","mercury","venus","mars","jupiter","saturn","uranus","neptune"];
     ids.forEach(id => {
       ["ra","dec","alt","az"].forEach(suffix => {
@@ -275,9 +269,23 @@ function updatePositions() {
         if (cell) cell.textContent = 'Error';
       });
     });
-  window.lastPlanetsData = [];
-  drawSkyMap([]);
+    window.lastPlanetsData = [];
+    drawSkyMap([]);
   }
 }
+
+// =============================
+// Event Listeners and Initialization
+// =============================
+window.addEventListener('DOMContentLoaded', () => {
+  setDefaultDateTime();
+  autofillGeolocation();
+  setupSkyMapDrag();
+});
+
+document.getElementById('use-geoloc').addEventListener('click', e => {
+  e.preventDefault();
+  autofillGeolocation();
+});
 
 document.getElementById("update-btn").addEventListener("click", updatePositions);
