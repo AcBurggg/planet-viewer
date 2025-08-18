@@ -179,6 +179,8 @@ function drawSkyMap(planetsData) {
 function setupSkyMapDrag() {
   const canvas = document.getElementById('sky-map');
   if (!canvas) return;
+
+  // Mouse events
   canvas.addEventListener('mousedown', e => {
     isDragging = true;
     dragStartX = e.clientX;
@@ -206,6 +208,37 @@ function setupSkyMapDrag() {
     canvas.style.cursor = 'pointer';
   });
   canvas.style.cursor = 'pointer';
+
+  // Touch events for mobile
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    isDragging = true;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+    dragStartAz = skyMapAzCenter;
+    dragStartAlt = skyMapAltCenter;
+    // Prevent scrolling when touching the canvas
+    e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchmove', e => {
+    if (!isDragging || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - dragStartX;
+    const dy = e.touches[0].clientY - dragStartY;
+    const azRange = 180;
+    const altRange = 120;
+    skyMapAzCenter = (dragStartAz - dx * (azRange / canvas.width) + 360) % 360;
+    skyMapAltCenter = dragStartAlt + dy * (altRange / canvas.height);
+    // Clamp altitude center
+    const maxCenter = 90 - altRange / 2;
+    const minCenter = -90 + altRange / 2;
+    skyMapAltCenter = Math.max(minCenter, Math.min(maxCenter, skyMapAltCenter));
+    if (window.lastPlanetsData) drawSkyMap(window.lastPlanetsData);
+    e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchend', e => {
+    isDragging = false;
+    canvas.style.cursor = 'pointer';
+  });
 }
 
 // =============================
